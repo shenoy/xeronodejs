@@ -2,11 +2,12 @@ const path = require("path");
 var cors = require("cors");
 const morgan = require("morgan");
 require("dotenv").config({ path: "./sample.env" });
-import express, { response } from "express";
-import { Request, Response } from "express";
-import jwtDecode from "jwt-decode";
-import { TokenSet } from "openid-client";
-import { XeroAccessToken, XeroIdToken, XeroClient } from "xero-node";
+const express = require("express");
+const { response } = require("express");
+const { Request, Response } = require("express");
+const jwtDecode = require("jwt-decode");
+const { TokenSet } = require("openid-client");
+const { XeroAccessToken, XeroIdToken, XeroClient } = require("xero-node");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const nodeCookie = require("node-cookie");
@@ -15,11 +16,11 @@ var userRouter = require("./routes/userRoutes");
 const mongoose = require("mongoose");
 const BalanceSheet = require("./models/balanceSheetModel.js");
 const session = require("express-session");
-const client_id: string = process.env.CLIENT_ID;
-const client_secret: string = process.env.CLIENT_SECRET;
-const redirectUrl: string = process.env.REDIRECT_URI;
-const scopes: string =
-"openid profile email accounting.settings accounting.reports.read accounting.journals.read accounting.contacts accounting.attachments accounting.transactions offline_access";
+const client_id = process.env.CLIENT_ID;
+const client_secret = process.env.CLIENT_SECRET;
+const redirectUrl = process.env.REDIRECT_URI;
+const scopes =
+  "openid profile email accounting.settings accounting.reports.read accounting.journals.read accounting.contacts accounting.attachments accounting.transactions offline_access";
 
 const xero = new XeroClient({
   clientId: client_id,
@@ -31,12 +32,12 @@ const xero = new XeroClient({
 if (!client_id || !client_secret || !redirectUrl) {
   throw Error(
     "Environment Variables not all set - please check your .env file in the project root or create one!"
-    );
-  }
-  
-  const app: express.Application = express();
-  app.use(cookieParser());
-  app.use(cors());
+  );
+}
+
+const app = express();
+app.use(cookieParser());
+app.use(cors());
 
 app.use(express.static(__dirname + "/build"));
 
@@ -52,7 +53,7 @@ app.use(
   })
 );
 
-const authenticationData: any = (req: Request, res: Response) => {
+const authenticationData = (req, res) => {
   return {
     decodedIdToken: req.session.decodedIdToken,
     decodedAccessToken: req.session.decodedAccessToken,
@@ -72,28 +73,26 @@ mongoose
   )
   .then(() => console.log("DB connection successful!"));
 
-app.get("/", (req: Request, res: Response) => {
+app.get("/", (req, res) => {
   res.send(`<a href='/connect'>Connect to Xero</a>`);
 });
 
-app.get("/connect", async (req: Request, res: Response) => {
+app.get("/connect", async (req, res) => {
   try {
-    const consentUrl: string = await xero.buildConsentUrl();
+    const consentUrl = await xero.buildConsentUrl();
     res.redirect(consentUrl);
   } catch (err) {
     res.send("Sorry, something went wrong");
   }
 });
 
-app.get("/starter/Callback", async (req: Request, res: Response) => {
+app.get("/starter/Callback", async (req, res) => {
   try {
-    const tokenSet: TokenSet = await xero.apiCallback(req.url);
+    const tokenSet = await xero.apiCallback(req.url);
     await xero.updateTenants();
 
-    const decodedIdToken: XeroIdToken = jwtDecode(tokenSet.id_token);
-    const decodedAccessToken: XeroAccessToken = jwtDecode(
-      tokenSet.access_token
-    );
+    const decodedIdToken = jwtDecode(tokenSet.id_token);
+    const decodedAccessToken = jwtDecode(tokenSet.access_token);
 
     req.session.decodedIdToken = decodedIdToken;
     req.session.decodedAccessToken = decodedAccessToken;
@@ -102,7 +101,7 @@ app.get("/starter/Callback", async (req: Request, res: Response) => {
     // XeroClient is sorting tenants behind the scenes so that most recent / active connection is at index 0
     req.session.activeTenant = xero.tenants[0];
 
-    const authData: any = authenticationData(req, res);
+    const authData = authenticationData(req, res);
 
     // console.log(authData);
 
@@ -113,9 +112,9 @@ app.get("/starter/Callback", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/reports", async (req: Request, res: Response) => {
+app.get("/reports", async (req, res) => {
   try {
-    const tokenSet: TokenSet = await xero.readTokenSet();
+    const tokenSet = await xero.readTokenSet();
     console.log(tokenSet.expired() ? "expired" : "valid");
     const balsheetDate = "2021-02-17";
     const balsheetPeriods = 7;
@@ -136,7 +135,7 @@ app.get("/reports", async (req: Request, res: Response) => {
     );
 
     const reportDate = getBalanceSheetResponse.body.reports[0].reportDate;
-    const company = getBalanceSheetResponse.body.reports[0].reportTitles[1]; 
+    const company = getBalanceSheetResponse.body.reports[0].reportTitles[1];
     const currentAssets =
       getBalanceSheetResponse.body.reports[0].rows[3].rows[1].cells[1].value;
     const capital =
@@ -168,30 +167,12 @@ app.get("/reports", async (req: Request, res: Response) => {
       .then((doc) => console.log(doc))
       .catch((err) => console.log(err));
 
-   
     res.redirect("http://localhost:4200/reports");
   } catch (err) {
     res.send("Sorry, something went wrong");
   }
 });
 app.use((req, res, next) => {
-  req.requestTime = new Date().toISOString();
-  console.log("COOKIES>>>", req.cookies);
-  next();
-});
-
-app.use((req, res, next) => {
-  const {
-    headers: { cookie },
-  } = req;
-  if (cookie) {
-    const values = cookie.split(";").reduce((res, item) => {
-      const data = item.trim().split("=");
-      return { ...res, [data[0]]: data[1] };
-    }, {});
-    res.locals.cookie = values;
-    console.log("CUSTOM COOKIE PARSER", values);
-  } else res.locals.cookie = {};
   next();
 });
 
@@ -201,17 +182,3 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
-
-//==========================================================================================================================
- // res.send(` Report Name : ${getBalanceSheetResponse.body.reports[0].reportName} </br>
-    // Report Date:   ${reportDate} </br>
-    // ASSETS</br>
-    // Accounts Receivable : ${currentAssets}</br>
-    // Capital : ${capital}</br>
-    // Fixed Assets:  ${fixedAssets}</br>
-    // Total Current Assets  : ${totalCurrentAssets}</br>
-    // LIABILITIES </br>
-    // Current Liabilities: ${currentLiabilities}</br>
-    // Equity : ${equity}
-
-    // `);

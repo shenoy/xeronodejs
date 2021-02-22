@@ -8,7 +8,7 @@
     "start:prod": "NODE_ENV=production ts-node-dev --respawn --transpile-only ./app/app.ts",
     "tsc": "tsc",
     "dev": "ts-node-dev --respawn --transpile-only ./app/app.ts",
-    "prod": "tsc && node ./build/app.js"
+    "prod": "node ./app/app.ts"
   },
   "author": "Xero Platform Team",
   "license": "MIT",

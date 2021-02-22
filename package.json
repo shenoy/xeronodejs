@@ -4,11 +4,7 @@
   "description": "a starter project using node, express, typescript, xero-node, and oauth 2.0",
   "main": "build/app.js",
   "scripts": {
-    "start": "ts-node-dev --respawn --transpile-only ./app/app.ts",
-    "start:prod": "NODE_ENV=production ts-node-dev --respawn --transpile-only ./app/app.ts",
-    "tsc": "tsc",
-    "dev": "ts-node-dev --respawn --transpile-only ./app/app.ts",
-    "prod": "node ./app/app.ts"
+    "start": "NODE_ENV=production node ./app/app.ts"
   },
   "author": "Xero Platform Team",
   "license": "MIT",

@@ -167,7 +167,7 @@ app.get("/reports", async (req, res) => {
       .then((doc) => console.log(doc))
       .catch((err) => console.log(err));
 
-    res.redirect("http://localhost:4200/reports");
+    res.redirect("https://assetmanpro.netlify.app/reports");
   } catch (err) {
     res.send("Sorry, something went wrong");
   }
